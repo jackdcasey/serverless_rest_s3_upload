@@ -1,0 +1,47 @@
+service: s3-data-collection
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+  stage: dev
+  region: us-east-1
+
+  environment:
+    S3_BUCKET: ${self:custom.s3_bucket}
+
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:ListBucket'
+      Resource:
+        Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: ServerlessDeploymentBucket
+    - Effect: 'Allow'
+      Action:
+        - 's3:PutObject'
+      Resource:
+        Fn::Join:
+          - ''
+          - - 'arn:aws:s3:::'
+            - Ref: ServerlessDeploymentBucket
+            - '/*'
+    - Effect: 'Allow'
+      Action:
+        - 's3:PutObject'
+      Resource: 'arn:aws:s3:::${self:custom.s3_bucket}/*'
+
+custom:
+  s3_bucket: s3-data-collection-bucket
+
+functions:
+  write:
+    handler: handler.write
+    events:
+      - http:
+          path: /
+          method: put
+
+
